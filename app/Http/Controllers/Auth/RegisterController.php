@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\User;
+use App\Models\Admin;
 use App\Http\Controllers\Controller;
-use App\User;
-use Illuminate\Foundation\Auth\RegistersUsers;
+use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
+// use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
+
 
 class RegisterController extends Controller
 {
@@ -38,6 +42,7 @@ class RegisterController extends Controller
     public function __construct()
     {
         $this->middleware('guest');
+        $this->middleware('guest:admin');
     }
 
     /**
@@ -46,27 +51,49 @@ class RegisterController extends Controller
      * @param  array  $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
-    protected function validator(array $data)
-    {
-        return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-    }
+    // protected function validator(array $data)
+    // {
+    //     // return Validator::make($data, [
+    //     //     // pour user simple
+    //     //     // 'name' => ['required', 'string', 'max:255'],
+    //     //     // 'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+    //     //     // 'password' => ['required', 'string', 'min:8', 'confirmed'],
+    //     //     // pour admin
+    //     //     // 'nameAdmn' => ['required', 'string', 'max:255'],
+    //     //     // 'prenomAdmn' => ['required', 'string', 'max:255'],
+    //     //     // 'emailAdmn' => ['required', 'string', 'email', 'max:255', 'unique:admins, email_admn'],
+    //     //     // 'password' => ['required', 'string', 'min:8', 'confirmed'],
+    //     // ]);
+    // }
 
-    /**
+    /** 
      * Create a new user instance after a valid registration.
      *
      * @param  array  $data
-     * @return \App\User
+     * @return \App\Models\User
      */
-    protected function create(array $data)
+    // protected function create(array $data)
+    protected function create(UserRequest $request)
     {
         return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'name' => $request['name'],
+            'email' => $request['email'],
+            'password' => Hash::make($request['password']),
         ]);
+    }
+
+    public function showAdminRegisterForm()
+    {
+        return view('auth.register', ['url' => 'admin']);
+    }
+    protected function createAdmin(Request $request)
+    {
+        $this->validator($request->all())->validate();
+        $admin = Admin::create([
+            'name' => $request['name'],
+            'email' => $request['email'],
+            'password' => Hash::make($request['password']),
+        ]);
+        return redirect()->intended('login/admin');
     }
 }
